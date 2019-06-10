@@ -15,7 +15,7 @@ module.exports = {
     {
       use: 'gridsome-source-craftql',
       options: {
-        url: 'http://backend.jakedohm.com/api',
+        url: 'https://example.com/api',
         token: process.env.AUTH_TOKEN,
       },
     },
