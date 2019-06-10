@@ -1,11 +1,11 @@
-# @gridsome/source-graphql
+# gridsome-source-craftql
 
-> Pull a remote GraphQL schema in locally
+> Integrate your Craft CMS installation with Gridsome via CraftQL
 
 ## Install
 
-- `yarn add @gridsome/source-graphql`
-- `npm install @gridsome/source-graphql`
+- `yarn add gridsome-source-craftql`
+- `npm install gridsome-source-craftql`
 
 ## Usage
 
@@ -13,15 +13,10 @@
 module.exports = {
   plugins: [
     {
-      use: '@gridsome/source-graphql',
+      use: 'gridsome-source-craftql',
       options: {
-        url: 'https://example.com/api',
-        fieldName: 'puppies',
-        typeName: 'puppyTypes',
-
-        headers: {
-          Authorization: `Bearer ${process.env.AUTH_TOKEN}`,
-        },
+        url: 'http://backend.jakedohm.com/api',
+        token: process.env.AUTH_TOKEN,
       },
     },
   ],
@@ -34,19 +29,20 @@ module.exports = {
 
 - Type: `string` _required_
 
-The URL of a GraphQL API endpoint to request your schema from.
+The URL of a CraftQL API endpoint to request your schema from.
 
 #### fieldName
 
-- Type: `string` _required_
+- Type: `string`
+- Default: `'craft'`
 
-The name that should be used to namespace your remote schema when it's merged in, so that it doesn't conflict with any local data.
+The name that should be used to namespace your CraftQL schema when it's merged in, so that it doesn't conflict with any local data.
 
-For instance, if you put "puppies" your remote schema's data will be available by querying like so:
+For instance, if you put "craftcms" your remote schema's data will be available by querying like so:
 
 ```
 query {
-  puppies {
+  craftcms {
     helloWorld
   }
 }
@@ -55,14 +51,14 @@ query {
 #### typeName
 
 - Type: `string`
-- Defaults: `fieldName`
+- Default: `fieldName`
 
 The prefix to be used for your imported schema's field types.
 
-#### headers
+#### token
 
-- Type: `object`
+- Type: `string`
 
-An object of headers to be passed along with your request to the API endpoint. This will generally be used to authenticate your request.
+Your CraftQL bearer token. You can obtain this token from CraftQL's plugin settings in your Craft CMS control panel. **Make sure you enable the proper permissions for your token**.
 
 **Note**: For safety, you should pass any sensitive tokens/passwords as environmental variables. To learn more, see the [Gridsome Docs on Environmental Variables](https://gridsome.org/docs/environment-variables/).

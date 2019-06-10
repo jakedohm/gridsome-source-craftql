@@ -1,6 +1,7 @@
 const { setContext } = require('apollo-link-context')
 const { HttpLink } = require('apollo-link-http')
 const fetch = require('node-fetch')
+const { existsSync } = require('fs')
 
 const {
   introspectSchema,
@@ -66,62 +67,66 @@ class CraftQLSource {
       routes for any of them that have a template.
     ****************************************************/
 
-    // api.createManagedPages(async ({ graphql, createPage }) => {
-    //   // Query our local GraphQL schema to get all sections
-    //   const { data: sectionsQuery } = await graphql(`
-    //     query {
-    //       ${fieldName} {
-    //         sections {
-    //           handle
-    //         }
-    //       }
-    //     }
-    //   `)
+    api.createManagedPages(async ({ graphql, createPage }) => {
+      // Query our local GraphQL schema to get all sections
+      const { data: sectionsQuery } = await graphql(`
+        query {
+          ${fieldName} {
+            sections {
+              handle
+            }
+          }
+        }
+    `)
 
-    //   // Loop over each section
-    //   await Promise.all(
-    //     sectionsQuery.sections.map(async section => {
-    //       const templatePath = `./src/templates/${section.handle}.vue`
-    //       const templateExists = existsSync(templatePath)
+      // Loop over each section
+      await Promise.all(
+        sectionsQuery.craft.sections.map(async section => {
+          const templatePath = `./src/templates/${section.handle}.vue`
+          const templateExists = existsSync(templatePath)
 
-    //       // If there's not a template for this section in the "templates" directory, don't register it as a route.
-    //       if (!templateExists) return false
+          // If there's not a template for this section in the "templates" directory, don't register it as a route.
+          if (!templateExists) return false
 
-    //       // Query our local GraphQL schema for this section's entries
-    //       const { data: entriesQuery } = await graphql(`
-    //       query {
-    //         ${fieldName} {
-    //           entries(section: ${section.handle}) {
-    //             slug,
-    //             id,
-    //             uri
-    //           }
-    //         }
-    //       }
-    //     `)
+          // Query our local GraphQL schema for this section's entries
+          const { data: entriesQuery } = await graphql(`
+          query {
+            ${fieldName} {
+              entries(section: ${section.handle}) {
+                slug,
+                id,
+                uri
+              }
+            }
+          }
+        `)
 
-    //       // If this section doesn't have entries, we don't care about it
-    //       if (!entriesQuery) return false
+          // If this section doesn't have entries, we don't care about it
+          if (!entriesQuery || !entriesQuery.craft) return false
 
-    //       // Loop through each entry in this section, and register it as a page (route)
-    //       entriesQuery.entries.forEach(entry => {
-    //         createPage({
-    //           path: `/${entry.uri}`,
-    //           component: `./src/templates/${section.handle}.vue`,
+          // Loop through each entry in this section, and register it as a page (route)
+          entriesQuery.craft.entries.forEach(entry => {
+            const path = entry.uri
+              ? `/${entry.uri}`
+              : `/${section.handle}/${entry.slug}`
 
-    //           // Provide variables about this entry which can be used in the entry's tempate, and <page-query>
-    //           context: {
-    //             id: entry.id,
-    //             section: {
-    //               id: section.id,
-    //               handle: section.handle,
-    //             },
-    //           },
-    //         })
-    //       })
-    //     })
-    //   )
-    // })
+            createPage({
+              path,
+              component: `./src/templates/${section.handle}.vue`,
+
+              // Provide variables about this entry which can be used in the entry's tempate, and <page-query>
+              context: {
+                id: entry.id,
+                section: {
+                  id: section.id,
+                  handle: section.handle,
+                },
+              },
+            })
+          })
+        })
+      )
+    })
   }
 
   async getRemoteExecutableSchema(uri, token) {
